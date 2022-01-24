@@ -2,6 +2,7 @@
 
 const main = document.querySelector('.main');
 const selection = document.querySelector('.selection');
+const title = document.querySelector('.main__title');
 
 const getData = () => {
     const dataBase = [
@@ -97,6 +98,23 @@ const getData = () => {
     return dataBase;
 }
 
+const hideElem = elem => {
+    let opacity = getComputedStyle(elem).getPropertyValue('opacity');
+    const animation = () => {
+        opacity -= 0.05;
+        elem.style.opacity = opacity;
+
+        if (opacity > 0) {
+            requestAnimationFrame(animation);
+        } else {
+            elem.style.display = 'none';
+        }
+
+    };
+
+    requestAnimationFrame(animation);
+};
+
 const renderTheme = themes => {
     const list = document.querySelector('.selection__list');
     list.textContent = '';
@@ -118,15 +136,63 @@ const renderTheme = themes => {
 
         buttons.push(button);
     }
-    console.log(buttons);
     return buttons;
-}
+};
 
+const renderQuiz = quiz => {
+    hideElem(title);
+    hideElem(selection);
+    
+
+    const questionBox = document.createElement('div');
+    questionBox.className = 'main__box main__box-question';
+
+    main.append(questionBox);
+
+    let questionCount = 0;
+    
+    const showQuestion = () => {
+        const data = quiz.list[questionCount];
+        questionCount++;
+        
+        questionBox.textContent= '';
+        
+        const form = document.createElement('form');
+        form.className = 'main__form-question';
+        form.dataset.count = `${questionCount}/${quiz.list.length}`;
+
+        const fieldset = document.createElement('fieldset');
+        const legend = document.createElement('legend');
+
+        legend.className = 'main__subtitle';
+        legend.textContent = data.question;
+
+        fieldset.append(legend);
+
+        form.append(fieldset);
+
+        questionBox.append(form);
+    };
+    showQuestion();
+};
+
+const addClick = (buttons, data) => {
+    buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const quiz = data.find(item => {
+                return item.id === btn.dataset.id;
+            });
+            renderQuiz(quiz);
+        });
+    });
+};
 
 const initQuiz = () => {
     const data = getData();
     
     const buttons = renderTheme(data);
+
+    addClick(buttons, data);
 };
 
-initQuiz()
+initQuiz();
