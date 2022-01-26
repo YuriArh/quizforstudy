@@ -8,7 +8,24 @@ const getData = () => {
     return fetch('db/quiz_db.json').then(responce => responce.json())
 };
 
-const hideElem = elem => {
+const showElem = elem => {
+    let opacity = 0;
+    elem.opacity = opacity;
+    elem.style.display = '';
+
+    const animation = () => {
+        opacity += 0.05;
+        elem.style.opacity = opacity;
+
+        if (opacity < 1) {
+            requestAnimationFrame(animation);
+        }
+    };
+    
+    requestAnimationFrame(animation);
+}
+
+const hideElem = (elem, cb) => {
     let opacity = getComputedStyle(elem).getPropertyValue('opacity');
     const animation = () => {
         opacity -= 0.05;
@@ -18,8 +35,8 @@ const hideElem = elem => {
             requestAnimationFrame(animation);
         } else {
             elem.style.display = 'none';
+            if (cb) cb();
         }
-
     };
 
     requestAnimationFrame(animation);
@@ -125,7 +142,7 @@ const showResult = (result, quiz) => {
 
     console.log(quiz.result[1][0])
 
-let ratio = 0;
+    let ratio = 0;
 
     for (let i = 0; i < quiz.result.length; i++) {
         if (percent >= quiz.result[i][0]) {
@@ -149,18 +166,27 @@ let ratio = 0;
     button.textContent = 'К списку квизов';
 
     block.append(button);
+
+
     main.append(block);
+    showElem(block);
+
+    button.addEventListener('click', () => {
+        hideElem(block, initQuiz);
+    });
+
 };
 
 
 const renderQuiz = quiz => {
-    hideElem(title);
-    hideElem(selection);
-
     const questionBox = document.createElement('div');
     questionBox.className = 'main__box main__box-question';
 
-    main.append(questionBox);
+    hideElem(title);
+    hideElem(selection, () => {
+        main.append(questionBox);
+        showElem(questionBox);
+    });
 
     let result = 0;
     let questionCount = 0;
@@ -193,7 +219,7 @@ const renderQuiz = quiz => {
         form.append(fieldset, button);
 
         questionBox.append(form);
-
+        showElem(form);
         form.addEventListener('submit', (event) => {
             event.preventDefault();
 
@@ -212,9 +238,11 @@ const renderQuiz = quiz => {
                 if (questionCount < quiz.list.length) {
                     showQuestion();
                 } else {
-                    hideElem(questionBox);
-                    showResult(result, quiz);
+                    
                     saveResult(result, quiz.id);
+                    hideElem(questionBox, () => {
+                        showResult(result, quiz);
+                    });
                 }
                 
             } else {
@@ -240,6 +268,9 @@ const addClick = (buttons, data) => {
 };
 
 const initQuiz = async () => {
+    showElem(title);
+    showElem(selection);
+
     const data = await getData();
     
     const buttons = renderTheme(data);
